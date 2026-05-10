@@ -1,0 +1,76 @@
+---
+---
+
+<div class="wall" id="feedbackWall">
+  <div class="loading-state">Loading messages...</div>
+</div>
+
+<style>
+  .loading-state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px dashed var(--border-color);
+  }
+</style>
+
+<script>
+  const wall = document.getElementById('feedbackWall');
+
+  async function fetchMessages() {
+    try {
+      const API_BASE = (import.meta as any).env.PUBLIC_API_URL || 'http://localhost:8787';
+      const response = await fetch(`${API_BASE}/api/messages`);
+      const { data } = await response.json();
+      
+      if (!wall) return;
+      
+      if (!data || data.length === 0) {
+        wall.innerHTML = '<div class="empty-state">No feedback yet. Be the first to share!</div>';
+        return;
+      }
+
+      wall.innerHTML = data.map((item: any, index: number) => `
+        <div class="card feedback-item animate-in" style="animation-delay: ${index * 0.1}s">
+          <div class="feedback-header">
+            <span class="feedback-name">${escapeHtml(item.name)}</span>
+            <span class="feedback-date">${formatDate(item.created_at)}</span>
+          </div>
+          <div class="feedback-message">${escapeHtml(item.message)}</div>
+        </div>
+      `).join('');
+    } catch (err) {
+      if (wall) wall.innerHTML = '<div class="empty-state" style="color: #f87171">Failed to load messages.</div>';
+    }
+  }
+
+  function escapeHtml(text: string) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatDate(dateStr: string) {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+
+  // Initial fetch
+  fetchMessages();
+
+  // Refresh on submission
+  window.addEventListener('feedback-submitted', fetchMessages);
+</script>

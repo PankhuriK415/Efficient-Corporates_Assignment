@@ -1,0 +1,90 @@
+---
+---
+
+<div class="card animate-in">
+  <form id="feedbackForm">
+    <div class="form-group">
+      <label for="name">Name (Optional)</label>
+      <input type="text" id="name" name="name" placeholder="Anonymous" maxlength="50" />
+    </div>
+    <div class="form-group">
+      <label for="message">Message *</label>
+      <textarea id="message" name="message" rows="4" placeholder="What's on your mind?" required maxlength="500"></textarea>
+      <div id="charCount" class="char-count">0 / 500</div>
+    </div>
+    <button type="submit" id="submitBtn">Post Anonymously</button>
+  </form>
+  <div id="statusMsg" style="margin-top: 1rem; text-align: center; display: none; font-size: 0.9rem;"></div>
+</div>
+
+<script>
+  const form = document.getElementById('feedbackForm') as HTMLFormElement;
+  const messageInput = document.getElementById('message') as HTMLTextAreaElement;
+  const charCount = document.getElementById('charCount');
+  const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+  const statusMsg = document.getElementById('statusMsg');
+
+  // Character counter
+  messageInput?.addEventListener('input', () => {
+    const length = messageInput.value.length;
+    if (charCount) charCount.textContent = `${length} / 500`;
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get('name') || 'Anonymous',
+      message: formData.get('message')
+    };
+
+    if (!data.message) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    
+    if (statusMsg) {
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = 'var(--text-muted)';
+      statusMsg.textContent = 'Submitting your feedback...';
+    }
+
+    try {
+      const API_BASE = (import.meta as any).env.PUBLIC_API_URL || 'http://localhost:8787';
+      const response = await fetch(`${API_BASE}/api/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        if (statusMsg) {
+          statusMsg.style.color = '#4ade80';
+          statusMsg.textContent = 'Feedback submitted successfully!';
+        }
+        form.reset();
+        if (charCount) charCount.textContent = '0 / 500';
+        
+        // Custom event to refresh the wall
+        window.dispatchEvent(new CustomEvent('feedback-submitted'));
+        
+        setTimeout(() => {
+          if (statusMsg) statusMsg.style.display = 'none';
+        }, 3000);
+      } else {
+        throw new Error(result.error || 'Failed to submit');
+      }
+    } catch (err: any) {
+      if (statusMsg) {
+        statusMsg.style.color = '#f87171';
+        statusMsg.textContent = `Error: ${err.message}`;
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Post Anonymously';
+    }
+  });
+</script>

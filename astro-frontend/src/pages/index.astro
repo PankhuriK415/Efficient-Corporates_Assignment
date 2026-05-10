@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Layout.astro';
+import FeedbackForm from '../components/FeedbackForm.astro';
+import FeedbackWall from '../components/FeedbackWall.astro';
+---
+
+<Layout title="Anonymous Feedback Wall">
+	<header class="animate-in">
+		<h1>Feedback Wall</h1>
+		<p class="subtitle">Share your thoughts, anonymously and freely.</p>
+	</header>
+
+	<section id="submit-section">
+		<FeedbackForm />
+	</section>
+
+	<section id="wall-section">
+		<FeedbackWall />
+	</section>
+
+  <footer style="margin-top: 4rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; padding-bottom: 2rem;">
+    <p>Built with Astro, Cloudflare Workers & Supabase</p>
+  </footer>
+</Layout>
+
+<style>
+  #wall-section {
+    margin-top: 4rem;
+  }
+</style>
