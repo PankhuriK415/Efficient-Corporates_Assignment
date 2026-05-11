@@ -42,16 +42,17 @@ app.get('/api/messages', async (c) => {
 
     if (error) throw error;
 
-    // Update KV cache with the latest 10 for the next request
+    // Update KV cache with the latest data for the next request
     if (data && data.length > 0) {
-      await c.env.FEEDBACK_KV.put('latest_messages', JSON.stringify(data.slice(0, 10)), {
+      await c.env.FEEDBACK_KV.put('latest_messages', JSON.stringify(data), {
         expirationTtl: 3600 // Cache for 1 hour
       });
     }
 
     return c.json({ source: 'supabase', data });
-  } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+  } catch (err: unknown) {
+    const error = err as Error;
+    return c.json({ error: error.message }, 500);
   }
 });
 
@@ -80,12 +81,12 @@ app.post('/api/submit', async (c) => {
 
     if (error) throw error;
 
-    // 2. Update KV cache with the latest 10 messages
+    // 2. Update KV cache with the latest 50 messages
     const { data: latestData } = await supabase
       .from('feedbacks')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(50);
 
     if (latestData) {
       await c.env.FEEDBACK_KV.put('latest_messages', JSON.stringify(latestData), {
@@ -94,8 +95,9 @@ app.post('/api/submit', async (c) => {
     }
 
     return c.json({ success: true, data });
-  } catch (err: any) {
-    return c.json({ error: err.message }, 500);
+  } catch (err: unknown) {
+    const error = err as Error;
+    return c.json({ error: error.message }, 500);
   }
 });
 
