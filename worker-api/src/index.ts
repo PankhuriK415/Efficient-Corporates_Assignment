@@ -11,7 +11,12 @@ type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Enable CORS for all routes
-app.use('*', cors());
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 600,
+}));
 
 // Health check
 app.get('/', (c) => c.text('Anonymous Feedback API is running!'));
